@@ -13,6 +13,7 @@ import cn.nukkit.nbt.tag.ListTag;
 import cn.nukkit.tile.Tile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ public abstract class BaseFullChunk implements FullChunk {
             return null;
         }
         if (this.biomeColors != null) {
-            chunk.biomeColors = this.biomeColors.clone();
+            chunk.biomeColors = this.getBiomeColorArray().clone();
         }
 
         if (this.blocks != null) {
@@ -84,7 +85,7 @@ public abstract class BaseFullChunk implements FullChunk {
         }
 
         if (this.heightMap != null) {
-            chunk.heightMap = this.heightMap.clone();
+            chunk.heightMap = this.getHeightMapArray().clone();
         }
 
         return chunk;
@@ -96,7 +97,7 @@ public abstract class BaseFullChunk implements FullChunk {
         }
         for (int x = 0; x < 16; ++x) {
             for (int z = 0; z < 16; ++z) {
-                Biome biome = Biome.getBiome(data[(z << 4) + x]);
+                Biome biome = Biome.getBiome(data[(z << 4) + x] & 0xff);
                 this.setBiomeId(x, z, biome.getId());
                 int c = biome.getColor();
                 this.setBiomeColor(x, z, c >> 16, (c >> 8) & 0xff, c & 0xff);
@@ -185,13 +186,13 @@ public abstract class BaseFullChunk implements FullChunk {
 
     @Override
     public int getBiomeId(int x, int z) {
-        return (this.biomeColors[(z << 4) + x] & 0xFF000000) >> 24;
+        return (this.getBiomeColorArray()[(z << 4) + x] & 0xFF000000) >> 24;
     }
 
     @Override
     public void setBiomeId(int x, int z, int biomeId) {
         this.hasChanged = true;
-        this.biomeColors[(z << 4) + x] = (this.biomeColors[(z << 4) + x] & 0xFFFFFF) | (biomeId << 24);
+        this.getBiomeColorArray()[(z << 4) + x] = (this.getBiomeColorArray()[(z << 4) + x] & 0xFFFFFF) | (biomeId << 24);
     }
 
     @Override
@@ -203,7 +204,7 @@ public abstract class BaseFullChunk implements FullChunk {
     @Override
     public void setBiomeColor(int x, int z, int R, int G, int B) {
         this.hasChanged = true;
-        this.biomeColors[(z << 4) + x] = (this.biomeColors[(z << 4) + x] & 0xFF000000) | ((R & 0xFF) << 16) | ((G & 0xFF) << 8) | (B & 0XFF);
+        this.getBiomeColorArray()[(z << 4) + x] = (this.getBiomeColorArray()[(z << 4) + x] & 0xFF000000) | ((R & 0xFF) << 16) | ((G & 0xFF) << 8) | (B & 0XFF);
     }
 
     @Override
@@ -389,14 +390,14 @@ public abstract class BaseFullChunk implements FullChunk {
                 }
             }
         }
-        for (Entity entity : this.getEntities().values()) {
+        for (Entity entity : new ArrayList<>(this.getEntities().values())) {
             if (entity instanceof Player) {
                 continue;
             }
             entity.close();
         }
 
-        for (Tile tile : this.getTiles().values()) {
+        for (Tile tile : new ArrayList<>(this.getTiles().values())) {
             tile.close();
         }
         this.provider = null;
@@ -425,9 +426,9 @@ public abstract class BaseFullChunk implements FullChunk {
 
     @Override
     public byte[] getBiomeIdArray() {
-        byte[] ids = new byte[this.biomeColors.length];
-        for (int i = 0; i < this.biomeColors.length; i++) {
-            int d = this.biomeColors[i];
+        byte[] ids = new byte[this.getBiomeColorArray().length];
+        for (int i = 0; i < this.getBiomeColorArray().length; i++) {
+            int d = this.getBiomeColorArray()[i];
             ids[i] = (byte) ((d & 0xFF000000) >> 24);
         }
         return ids;

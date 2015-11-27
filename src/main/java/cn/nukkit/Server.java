@@ -200,7 +200,7 @@ public class Server {
                 throw new RuntimeException(e);
             }
 
-            String fallback = "eng";
+            String fallback = BaseLang.FALLBACK_LANGUAGE;
             String language = null;
             while (language == null) {
                 String lang = this.console.readLine();
@@ -221,7 +221,6 @@ public class Server {
                 throw new RuntimeException(e);
             }
 
-            Nukkit.START_TIME = System.currentTimeMillis();//reset it!
         }
 
         this.console.start();
@@ -1305,8 +1304,8 @@ public class Server {
 
         Position spawn = this.getDefaultLevel().getSafeSpawn();
         CompoundTag nbt = new CompoundTag()
-                .putLong("firstPlayed", System.currentTimeMillis())
-                .putLong("lastPlayed", System.currentTimeMillis())
+                .putLong("firstPlayed", System.currentTimeMillis() / 1000)
+                .putLong("lastPlayed", System.currentTimeMillis() / 1000)
                 .putList(new ListTag<DoubleTag>("Pos")
                         .add(new DoubleTag("0", spawn.x))
                         .add(new DoubleTag("1", spawn.y))
